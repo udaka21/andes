@@ -109,6 +109,10 @@ public class AMQPLocalSubscription extends InboundSubscriptionEvent {
         if (amqpSubscription != null && amqpSubscription instanceof SubscriptionImpl.AckSubscription) {
             channel = ((SubscriptionImpl.AckSubscription) amqpSubscription).getChannel();
             initializeDeliveryRules();
+            Object clientIdentifier = this.channel.getProtocolSession().getClientIdentifier();
+            if (log.isDebugEnabled()) {
+                log.debug("AMQP subscription created for socket  " + clientIdentifier);
+            }
         }
     }
 
@@ -316,9 +320,11 @@ public class AMQPLocalSubscription extends InboundSubscriptionEvent {
             if (amqpSubscription instanceof SubscriptionImpl.AckSubscription) {
                 //this check is needed to detect if subscription has suddenly closed
                 if (log.isDebugEnabled()) {
+                    Object clientIdentifier = this.channel.getProtocolSession().getClientIdentifier();
+
                     log.debug("TRACING>> QDW- sent queue/durable topic message " +
                             msgHeaderStringID + " messageID-" + messageNumber + "-to " +
-                            "subscription " + amqpSubscription);
+                            "subscription " + amqpSubscription+" to socket "+clientIdentifier);
                 }
                 amqpSubscription.send(queueEntry);
             } else {
