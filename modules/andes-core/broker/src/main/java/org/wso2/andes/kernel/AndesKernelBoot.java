@@ -437,19 +437,14 @@ public class AndesKernelBoot {
         log.info("Syncing exchanges, queues, bindings and subscriptions");
         ClusterResourceHolder.getInstance().getAndesRecoveryTask()
                              .recoverExchangesQueuesBindingsSubscriptions();
-    }
 
-    /**
-     * clean up broker states and notify the cluster
-     *
-     * @throws AndesException
-     */
-    private static void cleanUpAndNotifyCluster() throws AndesException {
-        //at the shutDown close all localSubscriptions and notify cluster
-
-        ClusterResourceHolder.getInstance().getSubscriptionManager().closeAllLocalSubscriptionsOfNode();
-        // notify cluster this MB node is shutting down. For other nodes to do recovery tasks
-        ClusterResourceHolder.getInstance().getClusterManager().prepareLocalNodeForShutDown();
+        // All non-durable subscriptions subscribed from this node will be deleted since, there
+        // can't be any non-durable subscriptions as node just started.
+        // closeAllClusterSubscriptionsOfNode() should only be called after
+        // recoverExchangesQueuesBindingsSubscriptions() executed.
+        String myNodeId = ClusterResourceHolder.getInstance().getClusterManager().getMyNodeID();
+        ClusterResourceHolder.getInstance().getSubscriptionManager()
+                             .closeAllLocalSubscriptionsOfNode(myNodeId);
     }
 
     /**
