@@ -25,6 +25,8 @@ import com.google.common.cache.Weigher;
 import com.gs.collections.impl.list.mutable.primitive.LongArrayList;
 import com.gs.collections.impl.map.mutable.primitive.LongObjectHashMap;
 import org.apache.log4j.Logger;
+import org.wso2.andes.configuration.AndesConfigurationManager;
+import org.wso2.andes.configuration.enums.AndesConfiguration;
 import org.wso2.andes.configuration.util.ConfigurationProperties;
 import org.wso2.andes.kernel.AndesContextStore;
 import org.wso2.andes.kernel.AndesException;
@@ -71,6 +73,18 @@ import static org.wso2.andes.store.rdbms.RDBMSConstants.TASK_RETRIEVING_CONTENT_
  * in this class.
  */
 public class RDBMSMessageStoreImpl implements MessageStore {
+
+    Integer numberOfTables;
+
+    public RDBMSMessageStoreImpl() {
+        // Get number of tables from the AndesConfiguration.
+        AndesConfigurationManager.readValue(
+                AndesConfiguration.PERFORMANCE_TUNING_NUMBER_OF_TABLES);
+    }
+
+    public Integer getNumberOfTables() {
+        return numberOfTables;
+    }
 
     private static final Logger log = Logger.getLogger(RDBMSMessageStoreImpl.class);
 
@@ -1349,6 +1363,9 @@ public class RDBMSMessageStoreImpl implements MessageStore {
     private int getQueueID(final String destinationQueueName) throws SQLException {
 
         int queueID = -1;
+        int tableID = -1;
+        QueueMappingDetails queueMappingDetails;
+
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
@@ -1378,6 +1395,10 @@ public class RDBMSMessageStoreImpl implements MessageStore {
                 queueID = resultSet.getInt(RDBMSConstants.QUEUE_ID);
             }
 
+
+
+
+
         } catch (SQLException e) {
             log.error("Error occurred while retrieving destination queue id " +
                     "for destination queue " + destinationQueueName, e);
@@ -1388,6 +1409,28 @@ public class RDBMSMessageStoreImpl implements MessageStore {
                     RDBMSConstants.TASK_RETRIEVING_QUEUE_ID + destinationQueueName);
         }
         return queueID;
+    }
+
+    /**
+     * This inner class uses to get and set the queueID and tableID.
+     *
+     */
+    private class QueueMappingDetails {
+        private int queueID, tableID;
+
+        public QueueMappingDetails(int queueID, int tableID) {
+            //set tableID and queueID here.
+            this.queueID = queueID;
+            this.tableID = tableID;
+        }
+
+        public int getQueueID () {
+            return queueID;
+        }
+
+        public int getTableID () {
+            return tableID;
+        }
     }
 
     /**
