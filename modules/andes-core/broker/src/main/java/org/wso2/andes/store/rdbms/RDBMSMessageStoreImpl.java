@@ -1396,9 +1396,6 @@ public class RDBMSMessageStoreImpl implements MessageStore {
             }
 
 
-
-
-
         } catch (SQLException e) {
             log.error("Error occurred while retrieving destination queue id " +
                     "for destination queue " + destinationQueueName, e);

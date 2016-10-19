@@ -17,7 +17,14 @@ public class RDBMSVariables {
     private int  numberOfTables;
 
     protected static final String CONTENT_TABLE = "$MB_CONTENT";
+    protected static final String MESSAGE_ID = "MESSAGE_ID";
+    protected static final String MSG_OFFSET = "CONTENT_OFFSET";
+    protected static final String MESSAGE_CONTENT = "MESSAGE_CONTENT";
+
     protected static final String METADATA_TABLE = "$MB_METADATA";
+    protected static final String QUEUE_ID = "QUEUE_ID";
+    protected static final String DLC_QUEUE_ID = "DLC_QUEUE_ID";
+    protected static final String METADATA = "MESSAGE_METADATA";
 
 
     public RDBMSVariables() {
@@ -29,20 +36,14 @@ public class RDBMSVariables {
 
     for (int i = 0 ; i<numberOfTables ; i++ ) {
 
-        psInsertMessagePart[i] = ("protected static final String PS_INSERT_MESSAGE_PART"+ i + " =\n" +
-                "             \"INSERT INTO \" + CONTENT_TABLE"+ i +" + \"(\"\n" +
-                "                     + MESSAGE_ID + \",\"\n" +
-                "                     + MSG_OFFSET + \",\"\n" +
-                "                     + MESSAGE_CONTENT + \") VALUES (?, ?, ?)\"");
+        psInsertMessagePart[i] = (
+                "INSERT INTO"  + CONTENT_TABLE + i +" ( " + MESSAGE_ID +  " ," +
+                MSG_OFFSET + " ," + MESSAGE_CONTENT + ")" + " VALUES (?, ?, ?)");
 
-        psInsertMetadata[i] = "protected static final String PS_INSERT_METADATA"+ i +" =\n" +
-                " +            \"INSERT INTO \" + METADATA_TABLE2 + \" (\"\n" +
-                " +                    + MESSAGE_ID + \",\"\n" +
-                " +                    + QUEUE_ID + \",\"\n" +
-                " +                    + DLC_QUEUE_ID + \",\"\n" +
-                " +                    + METADATA + \")\"\n" +
-                " +                    + \" VALUES ( ?,?,-1,? )\"";
-    }
+        psInsertMetadata[i] = (
+                "INSERT INTO" + METADATA_TABLE + i + " ( " + MESSAGE_ID + " ," +
+                QUEUE_ID + " ," + DLC_QUEUE_ID + " ," + METADATA + " ) " + "VALUES ( ?,?,-1,? )");
+        }
 
     }
 }
