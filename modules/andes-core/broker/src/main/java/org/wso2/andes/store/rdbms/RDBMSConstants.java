@@ -212,10 +212,7 @@ public class RDBMSConstants {
     protected static final String PS_ALIAS_FOR_COUNT = "count";
 
     protected static final String PS_SELECT_QUEUE_MESSAGE_COUNT =
-            "SELECT COUNT(" + QUEUE_ID + ") AS " + PS_ALIAS_FOR_COUNT
-            + " FROM " + METADATA_TABLE
-            + " WHERE " + QUEUE_ID + "=?"
-            + " AND " + DLC_QUEUE_ID + "=-1";
+            PS_ALIAS_FOR_COUNT;
 
     /**
      * Prepared statement to retrieve message count within a message id range for a queue.
