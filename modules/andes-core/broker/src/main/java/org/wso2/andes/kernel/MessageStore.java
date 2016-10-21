@@ -45,14 +45,6 @@ public interface MessageStore extends HealthAwareStore {
             ConfigurationProperties connectionProperties) throws AndesException;
 
     /**
-     * store a message content chunk set
-     *
-     * @param partList message content chunk list
-     * @throws AndesException
-     */
-    void storeMessagePart(List<AndesMessagePart> partList) throws AndesException;
-
-    /**
      * read content chunk from store
      *
      * @param messageId   id of the message chunk belongs

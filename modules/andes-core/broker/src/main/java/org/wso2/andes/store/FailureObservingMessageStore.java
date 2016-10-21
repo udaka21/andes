@@ -98,19 +98,6 @@ public class FailureObservingMessageStore implements MessageStore {
      * {@inheritDoc}
      */
     @Override
-    public void storeMessagePart(List<AndesMessagePart> partList) throws AndesException {
-        try {
-            wrappedInstance.storeMessagePart(partList);
-        } catch (AndesStoreUnavailableException exception) {
-            notifyFailures(exception);
-            throw exception;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public AndesMessagePart getContent(long messageId, int offsetValue) throws AndesException {
         try {
             return wrappedInstance.getContent(messageId, offsetValue);
