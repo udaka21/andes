@@ -56,7 +56,7 @@ import static org.wso2.andes.store.rdbms.RDBMSConstants.*;
  */
 public class RDBMSMessageStoreImpl implements MessageStore {
 
-   // private Integer numberOfTables;
+    // private Integer numberOfTables;
     private RDBMSMultipleTableHandler multipleTableHandler = new RDBMSMultipleTableHandler();
 
     //TODO : Newly Added
@@ -235,9 +235,10 @@ public class RDBMSMessageStoreImpl implements MessageStore {
 
     /**
      * {@inheritDoc}
+     * @param messageIDList
      */
     @Override
-    public LongObjectHashMap<List<AndesMessagePart>> getContent(LongArrayList messageIDList) throws AndesException {
+    public LongObjectHashMap<List<AndesMessagePart>> getContent(HashMap<String, ArrayList<Long>> messageIDList) throws AndesException {
 
         LongObjectHashMap<List<AndesMessagePart>> contentList = new LongObjectHashMap<>(messageIDList.size());
         Context messageContentRetrievalContext = MetricManager.timer(MetricsConstants.GET_CONTENT_BATCH, Level.INFO)

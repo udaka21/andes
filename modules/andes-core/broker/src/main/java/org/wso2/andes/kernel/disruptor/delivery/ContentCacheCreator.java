@@ -95,15 +95,30 @@ public class ContentCacheCreator {
 
         LongHashSet messagesToFetch = new LongHashSet();
         List<DeliveryEventData> messagesWithoutCachedContent = new ArrayList<>();
+        String storageQueueName ;
+
+        HashMap<String, ArrayList<Long>> messageMap = new HashMap<>();
 
         for (DeliveryEventData deliveryEventData : eventDataList) {
             ProtocolMessage metadata = deliveryEventData.getMetadata();
             long messageID = metadata.getMessageID();
             int contentLength = metadata.getMessage().getMessageContentLength();
 
+            storageQueueName = metadata.getMessage().getSlot().getStorageQueueName();
+
+            ArrayList<Long> messageList = messageMap.get(storageQueueName);
+
+            if (null == messageList) {
+
+                messageList = new ArrayList<>();
+                messageMap.put(storageQueueName, messageList);
+            }
+            messageList.add(messageID);
+
             if (contentLength > 0) {
 
                 DisruptorCachedContent content = contentCache.getIfPresent(messageID);
+                //DisruptorCachedContent content = null;
 
                 if (null != content) {
                     deliveryEventData.setAndesContent(content);
@@ -126,11 +141,11 @@ public class ContentCacheCreator {
 
         }
 
-        LongArrayList containMessegesToFetch = new LongArrayList();
-        containMessegesToFetch.addAll(messagesToFetch);
+        LongArrayList containMessagesToFetch = new LongArrayList();
+        containMessagesToFetch.addAll(messagesToFetch);
 
         LongObjectHashMap<List<AndesMessagePart>> contentListMap = MessagingEngine.getInstance()
-                .getContent(containMessegesToFetch);
+                .getContent(messageMap);
 
         for (DeliveryEventData deliveryEventData : messagesWithoutCachedContent) {
 
