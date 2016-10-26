@@ -56,12 +56,12 @@ import static org.wso2.andes.store.rdbms.RDBMSConstants.*;
  */
 public class RDBMSMessageStoreImpl implements MessageStore {
 
-    // private Integer numberOfTables;
+//     private Integer numberOfTables;
     private RDBMSMultipleTableHandler multipleTableHandler = new RDBMSMultipleTableHandler();
 
-    //TODO : Newly Added
+    //TODO : Newly Added need to complete
     public RDBMSMessageStoreImpl() {
-        // Get number of tables from the AndesConfiguration.
+        //Get number of tables from the AndesConfiguration.
         AndesConfigurationManager.readValue(
                 AndesConfiguration.PERFORMANCE_TUNING_NUMBER_OF_TABLES);
     }
@@ -84,7 +84,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
     private RDBMSStoreUtils rdbmsStoreUtils;
 
     /**
-     * the message cache in use ( intension is to optimize reads)
+     * the message cache in use (intention is to optimize reads)
      */
     private AndesMessageCache messageCache;
 
@@ -184,7 +184,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
      */
     @Override
     public AndesMessagePart getContent(long messageId, int offsetValue) throws AndesException {
-
+// TO getContentFromStorage
         AndesMessagePart messagePart = null;
         Context messageContentRetrievalContext = MetricManager.timer(MetricsConstants.GET_CONTENT, Level.INFO).start();
         try {
@@ -211,7 +211,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet results = null;
-
+// TODO Add queue Name in the signature
         Context contextRead = MetricManager.timer(MetricsConstants.DB_READ, Level.INFO).start();
         try {
             connection = getConnection();
@@ -386,6 +386,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
             rollback(connection, RDBMSConstants.TASK_ADDING_METADATA);
             // If adding some of the messages failed, add them individually
             for (AndesMessage message : messageList) {
+                // TO storeMessages
                 storeMessage(message);
             }
         } catch (AndesException e) {
@@ -413,7 +414,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
         PreparedStatement storeMetadataPS = null;
         PreparedStatement storeContentPS = null;
         PreparedStatement storeExpiryMetadataPS = null;
-        //TODO : int queueID = getCachedQueueID(storageQueueName)
+        //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
         int  queueID = getCachedQueueID(RDBMSConstants.QUEUE_ID);
 
         try {
@@ -679,7 +680,8 @@ public class RDBMSMessageStoreImpl implements MessageStore {
      */
     @Override
     public AndesMessageMetadata getMetadata(long messageId) throws AndesException {
-//TODO
+
+        //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
         //Check if cache contains this message.
         AndesMessage cached = getMessageFromCache(messageId);
         if (null != cached) {
@@ -971,7 +973,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
         Context nextMetaRetrievalContext = MetricManager
                 .timer(Level.INFO, MetricsConstants.GET_NEXT_MESSAGE_METADATA_IN_DLC_FOR_QUEUE).start();
         Context contextRead = MetricManager.timer(MetricsConstants.DB_READ, Level.INFO).start();
-//TODO
+        //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
         try {
             connection = getConnection();
 
@@ -1207,7 +1209,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
 
         try {
             connection = getConnection();
-            //TODO :get Queue Name to this Method
+            //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
             //Since referential integrity is imposed on the two tables: message content and metadata,
             //deleting message metadata will cause message content to be automatically deleted
             metadataRemovalPreparedStatement = connection.prepareStatement(RDBMSConstants.PS_DELETE_METADATA_IN_DLC);
@@ -1281,8 +1283,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
         try {
             connection = getConnection();
             // get expired message list which are currently in DLC
-            //TODO : get Queue Name to this Method
-            //int
+            //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
 
             preparedStatement = connection.prepareStatement(RDBMSConstants.PS_SELECT_EXPIRED_MESSAGES_FROM_DLC);
             preparedStatement.setLong(1, System.currentTimeMillis());
@@ -1697,7 +1698,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
      */
     @Override
     public Map<String, Integer> getMessageCountForAllQueues(List<String> queueNames) throws AndesException {
-        //TODO
+        //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet results = null;
