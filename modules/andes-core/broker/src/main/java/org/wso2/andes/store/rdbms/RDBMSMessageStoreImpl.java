@@ -238,7 +238,8 @@ public class RDBMSMessageStoreImpl implements MessageStore {
      * @param messageIDList
      */
     @Override
-    public LongObjectHashMap<List<AndesMessagePart>> getContent(HashMap<String, ArrayList<Long>> messageIDList) throws AndesException {
+    public LongObjectHashMap<List<AndesMessagePart>> getContent(
+            HashMap<String, ArrayList<Long>> messageIDList) throws AndesException {
 
         LongObjectHashMap<List<AndesMessagePart>> contentList = new LongObjectHashMap<>(messageIDList.size());
         Context messageContentRetrievalContext = MetricManager.timer(MetricsConstants.GET_CONTENT_BATCH, Level.INFO)
@@ -504,7 +505,6 @@ public class RDBMSMessageStoreImpl implements MessageStore {
         Connection connection = null;
         PreparedStatement metadataPS = null;
         PreparedStatement expiryDataPS = null;
-        //TODO
         Context moveMetadataToDLCContext = MetricManager.timer(MetricsConstants.MOVE_METADATA_TO_DLC, Level.INFO)
                 .start();
         //Remove the message from cache
@@ -973,11 +973,13 @@ public class RDBMSMessageStoreImpl implements MessageStore {
         Context nextMetaRetrievalContext = MetricManager
                 .timer(Level.INFO, MetricsConstants.GET_NEXT_MESSAGE_METADATA_IN_DLC_FOR_QUEUE).start();
         Context contextRead = MetricManager.timer(MetricsConstants.DB_READ, Level.INFO).start();
+        int queueID = getCachedQueueID(dlcQueueName);
         //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
         try {
             connection = getConnection();
 
-            preparedStatement = connection.prepareStatement(RDBMSConstants.PS_SELECT_METADATA_IN_DLC_FOR_QUEUE);
+            preparedStatement = connection.prepareStatement(
+                    multipleTableHandler.getPsSelectMetadataInDlcForQueue(queueID));
             preparedStatement.setLong(1, firstMsgId - 1);
             preparedStatement.setInt(2, getCachedQueueID(storageQueueName));
             preparedStatement.setInt(3, getCachedQueueID(dlcQueueName));
@@ -1699,6 +1701,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
     @Override
     public Map<String, Integer> getMessageCountForAllQueues(List<String> queueNames) throws AndesException {
         //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
+        //Adding a for loop to this.
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet results = null;
@@ -2314,8 +2317,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
      * @param messageIDList message id to be found in cache.
      * @param contentList   the list the fill
      */
-    private void fillContentFromCache(LongArrayList messageIDList,
-            LongObjectHashMap<List<AndesMessagePart>> contentList) {
+    private void fillContentFromCache(LongArrayList messageIDList, LongObjectHashMap<List<AndesMessagePart>> contentList) {
         messageCache.fillContentFromCache(messageIDList, contentList);
     }
 

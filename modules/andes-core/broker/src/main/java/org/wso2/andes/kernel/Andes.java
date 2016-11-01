@@ -463,9 +463,6 @@ public class Andes {
      * @return AndesMessagePart
      * @throws AndesException
      */
-    public AndesMessagePart getMessageContentChunk(long messageID, int offsetInMessage) throws AndesException {
-        return MessagingEngine.getInstance().getMessageContentChunk(messageID, offsetInMessage);
-    }
 
     /**
      * Get a single metadata object.
@@ -525,26 +522,27 @@ public class Andes {
         MessagingEngine.getInstance().moveMessageToDeadLetterChannel(message, destinationQueueName);
     }
 
-    /**
-     * Get content chunk from store.
-     *
-     * @param messageId   id of the message
-     * @param offsetValue chunk id
-     * @return message content
-     * @throws AndesException
-     */
-    public AndesMessagePart getContent(long messageId, int offsetValue) throws AndesException {
-        return MessagingEngine.getInstance().getContent(messageId, offsetValue);
-    }
+//    /**
+//     * Get content chunk from store.
+//     *
+//     * @param messageId   id of the message
+//     * @param offsetValue chunk id
+//     * @return message content
+//     * @throws AndesException
+//     */
+//    public AndesMessagePart getContent(long messageId, int offsetValue) throws AndesException {
+//        return MessagingEngine.getInstance().getContent(messageId, offsetValue);
+//    }
 
     /**
      * Get content chunks for a list of message ids from store.
      *
      * @param messageIdList list of messageIds
+     * @param destinationQueueName
      * @return map of message id:content chunk list
      * @throws AndesException
      */
-    public LongObjectHashMap<List<AndesMessagePart>> getContent(LongArrayList messageIdList) throws AndesException {
+    public LongObjectHashMap<List<AndesMessagePart>> getContent(LongArrayList messageIdList, String destinationQueueName) throws AndesException {
         return MessagingEngine.getInstance().getContent(messageIdList);
     }
 

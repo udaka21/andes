@@ -18,6 +18,7 @@
 
 package org.wso2.andes.kernel;
 
+import com.gs.collections.impl.list.mutable.primitive.LongArrayList;
 import com.gs.collections.impl.map.mutable.primitive.LongObjectHashMap;
 import org.apache.log4j.Logger;
 import org.wso2.andes.configuration.AndesConfigurationManager;
@@ -135,6 +136,7 @@ public class MessagingEngine {
      * @return AndesMessagePart
      * @throws AndesException
      */
+    // TODO
     public AndesMessagePart getMessageContentChunk(long messageID, int offsetInMessage) throws AndesException {
         return messageStore.getContent(messageID, offsetInMessage);
     }
@@ -146,9 +148,8 @@ public class MessagingEngine {
      * @return <code>Map<Long, List<AndesMessagePart>></code> Message id and its corresponding message part list
      * @throws AndesException
      */
-    public LongObjectHashMap<List<AndesMessagePart>> getContent(HashMap<String, ArrayList<Long>> messageHash) throws AndesException {
+    public LongObjectHashMap<List<AndesMessagePart>> getContent(LongArrayList messageHash) throws AndesException {
         return messageStore.getContent(messageHash);
-
     }
 
     /**

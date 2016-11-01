@@ -412,7 +412,7 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
 
             try {
                 LongObjectHashMap<List<AndesMessagePart>> messageContent = Andes.getInstance()
-                        .getContent(andesMessageIdList);
+                        .getContent(andesMessageIdList, destinationQueueName);
 
                 boolean interruptedByFlowControl = false;
 
@@ -478,7 +478,7 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
 
             try {
                 LongObjectHashMap<List<AndesMessagePart>> messageContent = Andes.getInstance()
-                        .getContent(andesMessageIdList);
+                        .getContent(andesMessageIdList, destinationQueueName);
 
                 boolean interruptedByFlowControl = false;
 

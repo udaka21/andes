@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2005-2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -40,6 +40,10 @@ public class RDBMSMultipleTableHandler {
     private static final String PS_ALIAS_FOR_COUNT = "count";
     protected static final String QUEUE_NAME = RDBMSConstants.QUEUE_NAME;
     private static final String QUEUES_TABLE = "MB_QUEUE_MAPPING";
+    private static final String DESTINATION_QUEUE = "MESSAGE_DESTINATION";
+    private static final String EXPIRATION_TABLE = "MB_EXPIRATION_DATA";
+    private static final String EXPIRATION_TIME = "EXPIRATION_TIME";
+
 
     private static final String ALIAS_FOR_QUEUES = "QUEUE_COUNT";
 
@@ -71,6 +75,9 @@ public class RDBMSMultipleTableHandler {
     private String[] psUpdateMetadataQueue = new String[numberOfTables];
     private String[] psUpdateMetadata = new String[numberOfTables];
     private String[] psMoveMetadataToDlc = new String[numberOfTables];
+    private String[] psSelectExpiredMessages = new String[numberOfTables];
+    private String[] psUpdateDlcStatusInExpiryTable = new String[numberOfTables];
+    private String[] psSelectExpiredMessagesFromDlc = new String[numberOfTables];
 
 
     /**
@@ -204,6 +211,24 @@ public class RDBMSMultipleTableHandler {
                     + " SET " + DLC_QUEUE_ID + "=?"
                     + " WHERE " + MESSAGE_ID + "=?");
 
+            //MB_EXPIRATION_DATA table is ON DELETE CASCADE to MB_METADATA table.
+            //So when MB_METADATA# deletes it automatically deletes MB_EXPIRATION_DATA#
+            //So need to improvise MB_EXPIRATION_DATA table as to number of tables.
+            psSelectExpiredMessages[i] = ( "SELECT " + MESSAGE_ID + "," + DESTINATION_QUEUE
+                    + " FROM " + EXPIRATION_TABLE + i
+                    + " WHERE " + EXPIRATION_TIME + "<?"
+                    + " AND " + MESSAGE_ID + ">=?"
+                    + " AND " + DESTINATION_QUEUE + "=?");
+
+            psUpdateDlcStatusInExpiryTable[i] = ("UPDATE " + EXPIRATION_TABLE + i
+                    + " SET " + DLC_QUEUE_ID + "=?"
+                    + " WHERE " + MESSAGE_ID + "=?");
+
+            psSelectExpiredMessagesFromDlc[i] = ("SELECT " + MESSAGE_ID
+                    + " FROM " + EXPIRATION_TABLE + i
+                    + " WHERE " + EXPIRATION_TIME + "<?"
+                    + " AND " + DLC_QUEUE_ID + " != -1");
+
         }
     }
 
@@ -216,7 +241,8 @@ public class RDBMSMultipleTableHandler {
      * @return tableID relevant to the queueID given.
      */
     private int queueIDtoTableID (int queueID) {
-        return (queueID % numberOfTables);
+        int tableID = queueID % numberOfTables;
+        return tableID;
     }
 
     //Get the String query arrays according to the table id given.
@@ -338,5 +364,20 @@ public class RDBMSMultipleTableHandler {
     public String getPsMoveMetadataToDlc (int queueID) {
         int tableID = queueIDtoTableID(queueID);
         return psMoveMetadataToDlc[tableID];
+    }
+
+    public String getPsSelectExpiredMessages (int queueID) {
+        int tableID = queueIDtoTableID(queueID);
+        return psSelectExpiredMessages[tableID];
+    }
+
+    public String getPsUpdateDlcStatusInExpiryTable (int queueID) {
+        int tableID = queueIDtoTableID(queueID);
+        return psUpdateDlcStatusInExpiryTable[tableID];
+    }
+
+    public String getPsSelectExpiredMessagesFromDlc (int queueID) {
+        int tableID = queueIDtoTableID(queueID);
+        return psSelectExpiredMessagesFromDlc[tableID];
     }
 }

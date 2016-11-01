@@ -332,6 +332,8 @@ public class RDBMSConstants {
             "DELETE  FROM " + METADATA_TABLE
             + " WHERE " + DLC_QUEUE_ID + "=?";
 
+    // MB_EXPIRATION_DATA table is ON DELETE CASCADE to MB_METADATA table. So when MB_METADATA# deletes it automatically deletes MB_EXPIRATION_DATA#
+    // So need to improvise MB_EXPIRATION_DATA table as to number of tables.
     protected static final String PS_SELECT_EXPIRED_MESSAGES =
             "SELECT " + MESSAGE_ID + "," + DESTINATION_QUEUE
             + " FROM " + EXPIRATION_TABLE
@@ -997,7 +999,8 @@ public class RDBMSConstants {
             + " WHERE " + MESSAGE_ID + "=?";
 
     /**
-     * Prepared statement to update DLC status in expiry table
+     * Prepared statement to update DLC status in expiry table. Since EXPIRATION_TABLE is cascade delete with
+     * MB_METADATA table, This should move to RDBMSMultipleTableHandler.
      */
     protected static final String PS_UPDATE_DLC_STATUS_IN_EXPIRY_TABLE =
             "UPDATE " + EXPIRATION_TABLE

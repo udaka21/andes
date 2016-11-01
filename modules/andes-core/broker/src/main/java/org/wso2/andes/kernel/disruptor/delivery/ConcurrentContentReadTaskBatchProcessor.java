@@ -26,7 +26,6 @@ import org.wso2.andes.kernel.ProtocolMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -47,7 +46,7 @@ public class ConcurrentContentReadTaskBatchProcessor implements EventProcessor {
     private final int groupCount;
     private int batchSize;
 
-    private static int count =0;
+    //private static int count =0;
     /**
      * Construct a {@link EventProcessor} that will automatically track the progress by updating its sequence when
      * the {@link com.lmax.disruptor.EventHandler#onEvent(Object, long, boolean)} method returns.
@@ -141,6 +140,7 @@ public class ConcurrentContentReadTaskBatchProcessor implements EventProcessor {
 
                     ProtocolMessage metadata = event.getMetadata();
                     long currentMessageID = metadata.getMessageID();
+                    // Current Queue Name.
                     storageQueueName = metadata.getMessage().getStorageQueueName();
                     currentTurn = currentMessageID % groupCount;
                     if (turn == currentTurn) {
@@ -150,6 +150,7 @@ public class ConcurrentContentReadTaskBatchProcessor implements EventProcessor {
                         ArrayList<DeliveryEventData> messageMetadataList = messageMap.get(storageQueueName);
                         if (null == messageMetadataList) {
                             messageMetadataList = new ArrayList<>();
+                            // Put storageQueueName and messageMetadataList to messageMap hash.
                             messageMap.put(storageQueueName, messageMetadataList);
                         }
                         messageMetadataList.add(event);
