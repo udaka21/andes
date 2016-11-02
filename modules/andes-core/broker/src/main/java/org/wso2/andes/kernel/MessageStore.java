@@ -51,10 +51,11 @@ public interface MessageStore extends HealthAwareStore {
      *
      * @param messageId   id of the message chunk belongs
      * @param offsetValue chunk offset
+     * @param queueName
      * @return message content part
      * @throws AndesException
      */
-    AndesMessagePart getContent(long messageId, int offsetValue) throws AndesException;
+    AndesMessagePart getContent(long messageId, int offsetValue, String queueName) throws AndesException;
 
     /**
      * Read content for given message metadata list

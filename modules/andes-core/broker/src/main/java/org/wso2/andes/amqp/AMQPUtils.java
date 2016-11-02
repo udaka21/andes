@@ -211,10 +211,11 @@ public class AMQPUtils {
      * @param messageId   The message Id
      * @param offsetValue Chunk offset to read
      * @param dst         Buffer to fill bytes of content
+     * @param queueName   QueueName that contain each message
      * @return Written byte count
      * @throws AndesException
      */
-    public static int fillBufferFromContent(long messageId, int offsetValue, ByteBuffer dst) throws AndesException {
+    public static int fillBufferFromContent(long messageId, int offsetValue, ByteBuffer dst, String queueName) throws AndesException {
         int written = 0;
         int initialBufferSize = dst.remaining();
         int currentOffsetValue = offsetValue;
@@ -224,7 +225,7 @@ public class AMQPUtils {
             int indexToQuery = chunkIndex * DEFAULT_CONTENT_CHUNK_SIZE;
             int positionToReadFromChunk = currentOffsetValue - (chunkIndex * DEFAULT_CONTENT_CHUNK_SIZE);
 
-            AndesMessagePart messagePart = resolveCacheAndRetrieveMessagePart(messageId, indexToQuery);
+            AndesMessagePart messagePart = resolveCacheAndRetrieveMessagePart(messageId, indexToQuery, queueName);
 
             int messagePartSize = messagePart.getDataLength();
             int remainingSizeOfBuffer = initialBufferSize - dst.position();
@@ -262,10 +263,11 @@ public class AMQPUtils {
      *
      * @param messageId The message Id
      * @param index The offset index value of the message part
+     * @param queueName  QueueName that contain each message
      * @return Message Part
      * @throws AndesException
      */
-    private static AndesMessagePart resolveCacheAndRetrieveMessagePart(long messageId, int index) throws AndesException {
+    private static AndesMessagePart resolveCacheAndRetrieveMessagePart(long messageId, int index, String queueName) throws AndesException {
         AndesMessagePart messagePart = null;
         boolean needToCache = true;
 
@@ -275,7 +277,7 @@ public class AMQPUtils {
                 messagePart = cachedMessagePart;
                 needToCache = false;
         } else {
-            messagePart = MessagingEngine.getInstance().getMessageContentChunk(messageId, index);
+            messagePart = MessagingEngine.getInstance().getMessageContentChunk(messageId, index, queueName);
 
             if(messagePart == null) {
                 throw new AndesException("Empty message part received while retrieving message content.");

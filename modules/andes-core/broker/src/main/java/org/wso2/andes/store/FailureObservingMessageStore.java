@@ -100,9 +100,9 @@ public class FailureObservingMessageStore implements MessageStore {
      * {@inheritDoc}
      */
     @Override
-    public AndesMessagePart getContent(long messageId, int offsetValue) throws AndesException {
+    public AndesMessagePart getContent(long messageId, int offsetValue, String queueName) throws AndesException {
         try {
-            return wrappedInstance.getContent(messageId, offsetValue);
+            return wrappedInstance.getContent(messageId, offsetValue, );
         } catch (AndesStoreUnavailableException exception) {
             notifyFailures(exception);
             throw exception;

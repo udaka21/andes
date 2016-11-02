@@ -285,13 +285,14 @@ public class QpidAndesBridge {
      * @param messageID       id of the message
      * @param offsetInMessage offset to be read
      * @param dst             buffer to be filled by content bytes
+     * @param queueName       queue name for each message
      * @return written content length
      * @throws AMQException
      */
-    public static int getMessageContentChunk(long messageID, int offsetInMessage, ByteBuffer dst) throws AMQException {
+    public static int getMessageContentChunk(long messageID, int offsetInMessage, ByteBuffer dst, String queueName) throws AMQException {
         int contentLenWritten;
         try {
-            contentLenWritten = AMQPUtils.fillBufferFromContent(messageID, offsetInMessage, dst);
+            contentLenWritten = AMQPUtils.fillBufferFromContent(messageID, offsetInMessage, dst, queueName);
         } catch (AndesException e) {
             log.error("Error in getting message content", e);
             throw new AMQException(AMQConstant.INTERNAL_ERROR,

@@ -131,14 +131,14 @@ public class MessagingEngine {
     /**
      * Return the requested chunk of a message's content.
      *
-     * @param messageID       Unique ID of the Message
+     * @param messageID       Unique ID of the Message.
      * @param offsetInMessage The offset of the required chunk in the Message content.
+     * @param queueName       QueueName that contain each message.
      * @return AndesMessagePart
      * @throws AndesException
      */
-    // TODO
-    public AndesMessagePart getMessageContentChunk(long messageID, int offsetInMessage) throws AndesException {
-        return messageStore.getContent(messageID, offsetInMessage);
+    public AndesMessagePart getMessageContentChunk(long messageID, int offsetInMessage, String queueName) throws AndesException {
+        return messageStore.getContent(messageID, offsetInMessage, queueName);
     }
 
     /**
@@ -335,8 +335,8 @@ public class MessagingEngine {
      * @return message content
      * @throws AndesException
      */
-    public AndesMessagePart getContent(long messageId, int offsetValue) throws AndesException {
-        return messageStore.getContent(messageId, offsetValue);
+    public AndesMessagePart getContent(long messageId, int offsetValue, String queueName) throws AndesException {
+        return messageStore.getContent(messageId, offsetValue, queueName );
     }
 
     /**

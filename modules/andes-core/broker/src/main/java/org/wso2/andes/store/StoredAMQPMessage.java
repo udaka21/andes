@@ -93,7 +93,7 @@ public class StoredAMQPMessage implements StoredMessage {
     public int getContent(int offsetInMessage, ByteBuffer dst) {
         int c = 0;
         try {
-            c = QpidAndesBridge.getMessageContentChunk(messageId, offsetInMessage, dst);
+            c = QpidAndesBridge.getMessageContentChunk(messageId, offsetInMessage, dst, queueName);
         } catch (AMQException e) {
            log.error("Error while getting message content chunk messageID=" + messageId + " offset=" + offsetInMessage,e);
         }

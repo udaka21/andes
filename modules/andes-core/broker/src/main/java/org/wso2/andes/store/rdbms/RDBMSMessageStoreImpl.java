@@ -183,14 +183,14 @@ public class RDBMSMessageStoreImpl implements MessageStore {
      * {@inheritDoc}
      */
     @Override
-    public AndesMessagePart getContent(long messageId, int offsetValue) throws AndesException {
+    public AndesMessagePart getContent(long messageId, int offsetValue, String queueName) throws AndesException {
 // TO getContentFromStorage
         AndesMessagePart messagePart = null;
         Context messageContentRetrievalContext = MetricManager.timer(MetricsConstants.GET_CONTENT, Level.INFO).start();
         try {
             messagePart = getContentFromCache(messageId, offsetValue);
             if (null == messagePart) {
-                messagePart = getContentFromStorage(messageId, offsetValue);
+                messagePart = getContentFromStorage(messageId, offsetValue, queueName);
             }
         } finally {
             messageContentRetrievalContext.stop();
@@ -203,19 +203,24 @@ public class RDBMSMessageStoreImpl implements MessageStore {
      *
      * @param messageId   message id
      * @param offsetValue offset value
+     * @param queueName QueueName that contain each messageId
      * @return a {@link AndesMessagePart} if found in database
      * @throws AndesException an error
      */
-    private AndesMessagePart getContentFromStorage(long messageId, int offsetValue) throws AndesException {
+    private AndesMessagePart getContentFromStorage(
+            long messageId, int offsetValue, String queueName) throws AndesException {
         AndesMessagePart messagePart = null;
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet results = null;
-// TODO Add queue Name in the signature
+
         Context contextRead = MetricManager.timer(MetricsConstants.DB_READ, Level.INFO).start();
+        // get queueId inorder to select relevant table.
+        int queueId = getCachedQueueID(queueName);
+
         try {
             connection = getConnection();
-            preparedStatement = connection.prepareStatement(RDBMSConstants.PS_RETRIEVE_MESSAGE_PART);
+            preparedStatement = connection.prepareStatement(multipleTableHandler.getPsRetrieveMessagePart(queueId));
             preparedStatement.setLong(1, messageId);
             preparedStatement.setInt(2, offsetValue);
             results = preparedStatement.executeQuery();
