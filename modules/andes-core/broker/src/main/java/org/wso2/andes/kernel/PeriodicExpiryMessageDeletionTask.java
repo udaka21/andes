@@ -19,6 +19,7 @@ package org.wso2.andes.kernel;
 import com.google.common.util.concurrent.SettableFuture;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.andes.kernel.disruptor.delivery.DeliveryEventData;
 import org.wso2.andes.kernel.slot.AbstractSlotManager;
 import org.wso2.andes.kernel.slot.SlotManagerClusterMode;
 import org.wso2.andes.kernel.slot.SlotManagerStandalone;
@@ -27,6 +28,7 @@ import org.wso2.andes.store.HealthAwareStore;
 import org.wso2.andes.store.StoreHealthListener;
 import org.wso2.andes.tools.utils.MessageTracer;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -101,6 +103,9 @@ public class PeriodicExpiryMessageDeletionTask implements Runnable, StoreHealthL
                     // Get expired messages for that queue in the range of message ID starting from lower bound ID.
                     // Lower bound id -1 represents that there is no valid region to perform the delete
                     if (currentDeletionRangeLowerBoundId != -1) {
+
+                        HashMap<String, List<DeliveryEventData>>  messageMap = new HashMap<>();
+
                         List<Long> expiredMessages = MessagingEngine.getInstance()
                                 .getExpiredMessages(currentDeletionRangeLowerBoundId, queueName);
                         // Checks for the message store availability if its not available

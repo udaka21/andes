@@ -17,8 +17,6 @@
  */
 package org.wso2.andes.server.store;
 
-import java.util.List;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,13 +24,16 @@ import org.wso2.andes.AMQException;
 import org.wso2.andes.AMQStoreException;
 import org.wso2.andes.framing.AMQShortString;
 import org.wso2.andes.framing.FieldTable;
-import org.wso2.andes.kernel.*;
+import org.wso2.andes.kernel.AndesContext;
+import org.wso2.andes.kernel.MessagingEngine;
 import org.wso2.andes.kernel.subscription.AndesSubscriptionManager;
-import org.wso2.andes.store.StoredAMQPMessage;
 import org.wso2.andes.server.ClusterResourceHolder;
 import org.wso2.andes.server.exchange.Exchange;
 import org.wso2.andes.server.logging.LogSubject;
 import org.wso2.andes.server.queue.AMQQueue;
+import org.wso2.andes.store.StoredAMQPMessage;
+
+import java.util.List;
 
 /**
  * Implementations of {#{@link org.wso2.andes.kernel.MessageStore} replaces the functionality provided by this class
@@ -182,13 +183,15 @@ public class QpidDeprecatedMessageStore implements MessageStore {
     }
 
     @Override
-    public <T extends StorableMessageMetaData> StoredMessage<T> addMessage(T metaData) {
+    public <T extends StorableMessageMetaData> StoredAMQPMessage addMessage(T metaData) {
         try {
             long mid = MessagingEngine.getInstance().generateUniqueId();
+            //get storageQueueName for handle multiple tables.
+            String queueName = "";
             if (log.isDebugEnabled()) {
                 log.debug("MessageID generated:" + mid);
             }
-            return new StoredAMQPMessage(mid, metaData);
+            return new StoredAMQPMessage(mid, metaData, queueName);
 
         } catch (Exception e) {
             throw new RuntimeException(e);

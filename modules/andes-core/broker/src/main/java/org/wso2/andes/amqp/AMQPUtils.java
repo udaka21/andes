@@ -110,9 +110,11 @@ public class AMQPUtils {
      */
     public static AMQMessage getAMQMessageFromAndesMetaData(AndesMessageMetadata metadata) {
         long messageId = metadata.getMessageID();
+        //get storageQueueName for handle multiple  metadata tables.
+        String storageQueueName = metadata.getStorageQueueName();
         StorableMessageMetaData metaData = convertAndesMetadataToAMQMetadata(metadata);
         //create message with meta data. This has access to message content
-        StoredAMQPMessage message = new StoredAMQPMessage(messageId, metaData);
+        StoredAMQPMessage message = new StoredAMQPMessage(messageId, metaData, storageQueueName);
         AMQMessage amqMessage = new AMQMessage(message);
         return amqMessage;
     }
@@ -140,10 +142,12 @@ public class AMQPUtils {
      */
     public static AMQMessage getAMQMessageForDelivery(ProtocolMessage metadata, AndesContent content) {
         long messageId = metadata.getMessageID();
+        //get storageQueueName for handle multiple metadata tables.
+        String storageQueueName = metadata.getMessage().getSlot().getStorageQueueName();
         //create message with meta data. This has access to message content
         StorableMessageMetaData metaData = convertAndesMetadataToAMQMetadata(metadata.getMessage());
         QpidStoredMessage<MessageMetaData> message = new QpidStoredMessage<>(
-                new StoredAMQPMessage(messageId, metaData), content);
+                new StoredAMQPMessage(messageId, metaData, storageQueueName), content);
         AMQMessage amqMessage = new AMQMessage(message);
         amqMessage.setAndesMetadataReference(metadata);
         return amqMessage;

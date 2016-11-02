@@ -33,6 +33,7 @@ import org.wso2.andes.server.logging.actors.CurrentActor;
 import org.wso2.andes.server.logging.messages.ConfigStoreMessages;
 import org.wso2.andes.server.logging.messages.MessageStoreMessages;
 import org.wso2.andes.server.queue.AMQQueue;
+import org.wso2.andes.store.StoredAMQPMessage;
 
 /** A simple message store that stores the messages in a threadsafe structure in memory. */
 public class MemoryMessageStore implements MessageStore
@@ -102,7 +103,7 @@ public class MemoryMessageStore implements MessageStore
 
     }
 
-    public StoredMessage addMessage(StorableMessageMetaData metaData)
+    public StoredAMQPMessage addMessage(StorableMessageMetaData metaData)
     {
         final long id = _messageId.getAndIncrement();
         StoredMemoryMessage message = new StoredMemoryMessage(id, metaData);

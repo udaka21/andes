@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2005-2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -115,10 +115,11 @@ public interface MessageStore extends HealthAwareStore {
      * read metadata from store
      *
      * @param messageId id of the message
+     * @param queueName queueName that contain each message
      * @return metadata of the message
      * @throws AndesException
      */
-    AndesMessageMetadata getMetadata(long messageId) throws AndesException;
+    AndesMessageMetadata getMetadata(long messageId, String queueName) throws AndesException;
 
     /**
      * read a metadata list from store specifying a message id range

@@ -34,7 +34,8 @@ public class StoredAMQPMessage implements StoredMessage {
 
     private static Log log = LogFactory.getLog(StoredAMQPMessage.class);
 
-    private final long _messageId;
+    private final long messageId;
+    private String queueName;
     private StorableMessageMetaData metaData;
     private String channelID;
     private String exchange;
@@ -45,11 +46,13 @@ public class StoredAMQPMessage implements StoredMessage {
      * Create a stored message combining metadata and message ID
      * @param messageId message ID
      * @param metaData  metadata of message
+     * @param queueName
      */
     //todo; we can generalize this as StoredMessage (based on metada info it will refer relevant store)
-    public StoredAMQPMessage(long messageId, StorableMessageMetaData metaData) {
+    public StoredAMQPMessage(long messageId, StorableMessageMetaData metaData, String queueName) {
 
-        this._messageId = messageId;
+        this.queueName = queueName;
+        this.messageId = messageId;
         this.metaData = metaData;
     }
 
@@ -57,9 +60,9 @@ public class StoredAMQPMessage implements StoredMessage {
     public StorableMessageMetaData getMetaData() {
         if (metaData == null) {
             try {
-                QpidAndesBridge.getMessageMetaData(_messageId);
+                QpidAndesBridge.getMessageMetaData(messageId, queueName);
             } catch (AMQException e) {
-                log.error("Error while getting message metaData for message ID " + _messageId);
+                log.error("Error while getting message metaData for message ID " + messageId);
             }
         }
         return metaData;
@@ -67,7 +70,7 @@ public class StoredAMQPMessage implements StoredMessage {
 
     @Override
     public long getMessageNumber() {
-        return _messageId;
+        return messageId;
     }
 
     @Override
@@ -90,9 +93,9 @@ public class StoredAMQPMessage implements StoredMessage {
     public int getContent(int offsetInMessage, ByteBuffer dst) {
         int c = 0;
         try {
-            c = QpidAndesBridge.getMessageContentChunk(_messageId, offsetInMessage, dst);
+            c = QpidAndesBridge.getMessageContentChunk(messageId, offsetInMessage, dst);
         } catch (AMQException e) {
-           log.error("Error while getting message content chunk messageID=" + _messageId + " offset=" + offsetInMessage,e);
+           log.error("Error while getting message content chunk messageID=" + messageId + " offset=" + offsetInMessage,e);
         }
         return c;
     }

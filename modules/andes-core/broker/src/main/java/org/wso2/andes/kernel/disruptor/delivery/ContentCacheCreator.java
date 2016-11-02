@@ -87,9 +87,11 @@ public class ContentCacheCreator {
      * @param messageMap List of delivery event data
      * @throws AndesException Thrown when getting content from the message store.
      */
-    public void onEvent(List<DeliveryEventData> messageMap) throws AndesException {
+    public void onEvent(HashMap<String, ArrayList<DeliveryEventData>> messageMap) throws AndesException {
 
         LongHashSet messagesToFetch = new LongHashSet();
+        // We are making a Hashmap in ConcurrentContentReadTaskBatchProcessor. So no need to recreate it here.
+
 //        List<DeliveryEventData> messagesWithoutCachedContent = new ArrayList<>();
 //        String storageQueueName ;
 //

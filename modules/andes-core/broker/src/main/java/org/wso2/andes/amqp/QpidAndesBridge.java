@@ -225,7 +225,8 @@ public class QpidAndesBridge {
             Long localCount = receivedMessageCounter.incrementAndGet();
             if (localCount % 10000 == 0) {
                 long timetook = System.currentTimeMillis() - last10kMessageReceivedTimestamp;
-                log.debug("Received " + localCount + ", throughput = " + (10000 * 1000 / timetook) + " msg/sec, " + timetook);
+                log.debug("Received " + localCount + ", throughput = " +
+                        (10000 * 1000 / timetook) + " msg/sec, " + timetook);
                 last10kMessageReceivedTimestamp = System.currentTimeMillis();
             }
         }
@@ -236,17 +237,19 @@ public class QpidAndesBridge {
      * read metadata of a message from store
      *
      * @param messageID id of the message
+     * @param queueName
      * @return StorableMessageMetaData
      * @throws AMQException
      */
-    public static StorableMessageMetaData getMessageMetaData(long messageID) throws AMQException {
+    public static StorableMessageMetaData getMessageMetaData(long messageID, String queueName) throws AMQException {
         StorableMessageMetaData metaData;
         try {
             metaData = AMQPUtils.convertAndesMetadataToAMQMetadata
-                    (MessagingEngine.getInstance().getMessageMetaData(messageID));
+                    (MessagingEngine.getInstance().getMessageMetaData(messageID, queueName));
         } catch (AndesException e) {
             log.error("Error in getting meta data for messageID", e);
-            throw new AMQException(AMQConstant.INTERNAL_ERROR, "Error in getting meta data for messageID " + messageID, e);
+            throw new AMQException(AMQConstant.INTERNAL_ERROR,
+                    "Error in getting meta data for messageID " + messageID, e);
         }
         return metaData;
     }
@@ -291,7 +294,8 @@ public class QpidAndesBridge {
             contentLenWritten = AMQPUtils.fillBufferFromContent(messageID, offsetInMessage, dst);
         } catch (AndesException e) {
             log.error("Error in getting message content", e);
-            throw new AMQException(AMQConstant.INTERNAL_ERROR, "Error in getting message content chunk messageID " + messageID + " offset=" + offsetInMessage, e);
+            throw new AMQException(AMQConstant.INTERNAL_ERROR,
+                    "Error in getting message content chunk messageID " + messageID + " offset=" + offsetInMessage, e);
         }
         return contentLenWritten;
     }
@@ -330,7 +334,8 @@ public class QpidAndesBridge {
 
             channel.setLastRejectedMessageId(message.getMessageNumber());
 
-            rejectedMessage.setIsBeyondLastRollbackedMessage(channel.isMessageBeyondLastRollback(message.getMessageId()));
+            rejectedMessage.setIsBeyondLastRollbackedMessage(
+                    channel.isMessageBeyondLastRollback(message.getMessageId()));
 
             log.debug("AMQP BRIDGE: rejected message id= " + rejectedMessage.getMessageID()
                     + " channel = " + channel.getId());
@@ -353,8 +358,8 @@ public class QpidAndesBridge {
     public static void createAMQPSubscription(Subscription subscription, AMQQueue queue) throws AMQException {
         try {
             if (log.isDebugEnabled()) {
-                log.debug("AMQP BRIDGE: create AMQP Subscription subID " + subscription.getSubscriptionID() + " from queue "
-                        + queue.getName());
+                log.debug("AMQP BRIDGE: create AMQP Subscription subID " +
+                        subscription.getSubscriptionID() + " from queue " + queue.getName());
             }
 
             if (subscription instanceof SubscriptionImpl.BrowserSubscription) {
@@ -363,7 +368,8 @@ public class QpidAndesBridge {
                 deliveryWorker.send();
             } else {
                 if (log.isDebugEnabled()) {
-                    log.debug("Adding Subscription " + subscription.getSubscriptionID() + " to queue " + queue.getName());
+                    log.debug("Adding Subscription " + subscription.getSubscriptionID() +
+                            " to queue " + queue.getName());
                 }
                 addLocalSubscriptionsForAllBindingsOfQueue(queue, subscription);
             }
@@ -385,8 +391,8 @@ public class QpidAndesBridge {
      */
     public static void closeAMQPSubscription(AMQQueue queue, Subscription subscription) throws AndesException {
         if (log.isDebugEnabled()) {
-            log.debug("AMQP BRIDGE: close AMQP Subscription subID " + subscription.getSubscriptionID() + " from queue " +
-                    queue.getName());
+            log.debug("AMQP BRIDGE: close AMQP Subscription subID " + subscription.getSubscriptionID() +
+                    " from queue " + queue.getName());
         }
 
         // Browser subscriptions are not registered and hence not needed to be closed.
@@ -502,7 +508,8 @@ public class QpidAndesBridge {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("AMQP BRIDGE: addBinding exchange=" + exchange.getName() + " routingKey=" + routingKey + " queue=" + queue.getName());
+            log.debug("AMQP BRIDGE: addBinding exchange=" + exchange.getName() + " routingKey=" +
+                    routingKey + " queue=" + queue.getName());
         }
         try {
             /**
@@ -551,7 +558,8 @@ public class QpidAndesBridge {
      * @param subscription subscription
      * @throws AndesException
      */
-    private static void addLocalSubscriptionsForAllBindingsOfQueue(AMQQueue queue, Subscription subscription) throws AndesException {
+    private static void addLocalSubscriptionsForAllBindingsOfQueue(AMQQueue queue, Subscription subscription)
+            throws AndesException {
 
         String localNodeID = ClusterResourceHolder.getInstance().getClusterManager().getMyNodeID();
         List<Binding> bindingList = queue.getBindings();
@@ -563,7 +571,7 @@ public class QpidAndesBridge {
             try {
                 for (Binding b : bindingList) {
                     // We ignore default exchange events. Andes doesn't honor creation of AMQ default exchange bindings
-                    if (b.getExchange().getNameShortString().equals(ExchangeDefaults.DEFAULT_EXCHANGE_NAME.toString())) {
+                    if (b.getExchange().getNameShortString().equals(ExchangeDefaults.DEFAULT_EXCHANGE_NAME.toString())){
                         continue;
                     }
 

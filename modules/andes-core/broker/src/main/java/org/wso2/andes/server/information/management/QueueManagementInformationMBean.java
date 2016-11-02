@@ -424,7 +424,8 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
                         interruptedByFlowControl = true;
                         break;
                     }
-                    AndesMessageMetadata metadata = Andes.getInstance().getMessageMetaData(messageId);
+                    AndesMessageMetadata metadata = Andes.getInstance().getMessageMetaData(
+                            messageId, destinationQueueName);
                     if (null != metadata) {
                         messagesToRemove.add(metadata);
                         // get the message chunk details
@@ -490,7 +491,8 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
                         interruptedByFlowControl = true;
                         break;
                     }
-                    AndesMessageMetadata metadata = Andes.getInstance().getMessageMetaData(messageId);
+                    AndesMessageMetadata metadata = Andes.getInstance().getMessageMetaData(
+                            messageId, destinationQueueName);
                     if(null != metadata) {
                         StorageQueue newStorageQueue = AndesContext.getInstance().getStorageQueueRegistry()
                                 .getStorageQueue(newDestinationQueueName);

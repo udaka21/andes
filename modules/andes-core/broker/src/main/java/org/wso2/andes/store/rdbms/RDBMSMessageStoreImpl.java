@@ -679,9 +679,9 @@ public class RDBMSMessageStoreImpl implements MessageStore {
      * {@inheritDoc}
      */
     @Override
-    public AndesMessageMetadata getMetadata(long messageId) throws AndesException {
+    public AndesMessageMetadata getMetadata(long messageId, String queueName) throws AndesException {
 
-        //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
+        int queueID = getCachedQueueID(queueName);
         //Check if cache contains this message.
         AndesMessage cached = getMessageFromCache(messageId);
         if (null != cached) {
@@ -698,7 +698,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
 
         try {
             connection = getConnection();
-            preparedStatement = connection.prepareStatement(RDBMSConstants.PS_SELECT_METADATA);
+            preparedStatement = connection.prepareStatement(multipleTableHandler.getPsSelectMetadata(queueID));
             preparedStatement.setLong(1, messageId);
             results = preparedStatement.executeQuery();
             if (results.next()) {
@@ -974,7 +974,6 @@ public class RDBMSMessageStoreImpl implements MessageStore {
                 .timer(Level.INFO, MetricsConstants.GET_NEXT_MESSAGE_METADATA_IN_DLC_FOR_QUEUE).start();
         Context contextRead = MetricManager.timer(MetricsConstants.DB_READ, Level.INFO).start();
         int queueID = getCachedQueueID(dlcQueueName);
-        //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
         try {
             connection = getConnection();
 

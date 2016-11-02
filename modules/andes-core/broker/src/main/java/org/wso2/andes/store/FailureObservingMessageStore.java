@@ -193,9 +193,9 @@ public class FailureObservingMessageStore implements MessageStore {
      * {@inheritDoc}
      */
     @Override
-    public AndesMessageMetadata getMetadata(long messageId) throws AndesException {
+    public AndesMessageMetadata getMetadata(long messageId, String queueName) throws AndesException {
         try {
-            return wrappedInstance.getMetadata(messageId);
+            return wrappedInstance.getMetadata(messageId, queueName);
         } catch (AndesStoreUnavailableException exception) {
             notifyFailures(exception);
             throw exception;

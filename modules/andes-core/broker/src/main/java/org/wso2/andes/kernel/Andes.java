@@ -468,11 +468,12 @@ public class Andes {
      * Get a single metadata object.
      *
      * @param messageID id of the message
+     * @param destinationQueueName
      * @return AndesMessageMetadata
      * @throws AndesException
      */
-    public AndesMessageMetadata getMessageMetaData(long messageID) throws AndesException {
-        return MessagingEngine.getInstance().getMessageMetaData(messageID);
+    public AndesMessageMetadata getMessageMetaData(long messageID, String destinationQueueName) throws AndesException {
+        return MessagingEngine.getInstance().getMessageMetaData(messageID, destinationQueueName);
     }
 
     /**

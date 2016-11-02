@@ -40,7 +40,6 @@ import org.wso2.andes.framing.abstraction.ContentChunk;
 import org.wso2.andes.framing.abstraction.MessagePublishInfo;
 import org.wso2.andes.kernel.Andes;
 import org.wso2.andes.kernel.AndesChannel;
-import org.wso2.andes.kernel.AndesContext;
 import org.wso2.andes.kernel.AndesException;
 import org.wso2.andes.kernel.FlowControlListener;
 import org.wso2.andes.kernel.disruptor.inbound.InboundTransactionEvent;
@@ -1696,12 +1695,14 @@ public class AMQChannel implements SessionConfig, AMQSessionModel
         }
     }
 
-    public <T extends StorableMessageMetaData> StoredMessage<T> addAMQPMessage(T metaData){
+    public <T extends StorableMessageMetaData> StoredAMQPMessage addAMQPMessage(T metaData){
+        //get storageQueueName for handle multiple tables.
+        String storageQueueName = "";
         long mid = 0; // Message IDs will be given By Andes
         if (_logger.isDebugEnabled()) {
             _logger.debug("MessageID generated:" + mid);
         }
-        return new StoredAMQPMessage(mid, metaData);
+        return new StoredAMQPMessage(mid, metaData, storageQueueName);
     }
 
     /**

@@ -19,6 +19,7 @@ package org.wso2.andes.server.store;
 
 import org.wso2.andes.server.logging.LogSubject;
 import org.apache.commons.configuration.Configuration;
+import org.wso2.andes.store.StoredAMQPMessage;
 
 /**
  * MessageStore defines the interface to a storage area, which can be used to preserve the state of messages.
@@ -63,7 +64,7 @@ public interface MessageStore extends DurableConfigurationStore, TransactionLog
     void close() throws Exception;
 
 
-    public <T extends StorableMessageMetaData> StoredMessage<T> addMessage(T metaData);
+    public <T extends StorableMessageMetaData> StoredAMQPMessage addMessage(T metaData);
 
 
     /**
