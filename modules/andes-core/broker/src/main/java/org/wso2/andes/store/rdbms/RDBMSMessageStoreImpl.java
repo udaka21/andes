@@ -1207,7 +1207,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
     @Override
     public void deleteDLCMessages(List<AndesMessageMetadata> messagesToRemove) throws AndesException {
         Connection connection = null;
-        PreparedStatement metadataRemovalPreparedStatement = null;
+        PreparedStatement[] metadataRemovalPreparedStatement = null;
 
         Context messageDeletionContext = MetricManager
                 .timer(Level.INFO, MetricsConstants.DELETE_MESSAGE_META_DATA_AND_CONTENT).start();
@@ -1215,19 +1215,27 @@ public class RDBMSMessageStoreImpl implements MessageStore {
 
         try {
             connection = getConnection();
-            //TODO : int queueID = getCachedQueueID(storageQueueName)  TODO Add queue Name in the signature
             //Since referential integrity is imposed on the two tables: message content and metadata,
             //deleting message metadata will cause message content to be automatically deleted
-            metadataRemovalPreparedStatement = connection.prepareStatement(RDBMSConstants.PS_DELETE_METADATA_IN_DLC);
+            //metadataRemovalPreparedStatement = connection.prepareStatement(RDBMSConstants.PS_DELETE_METADATA_IN_DLC);
 
             for (AndesMessageMetadata message : messagesToRemove) {
+                String queueName = message.getStorageQueueName();
+                int queueId = getCachedQueueID(queueName);
+
+                if (null == metadataRemovalPreparedStatement[queueId]) {
+                    metadataRemovalPreparedStatement[queueId] =
+                            connection.prepareStatement(multipleTableHandler.getPsDeleteMetadataInDlc(queueId));
+                }
                 //add parameters to delete metadata
-                metadataRemovalPreparedStatement.setLong(1, message.getMessageID());
-                metadataRemovalPreparedStatement.addBatch();
+                metadataRemovalPreparedStatement[queueId].setLong(1, message.getMessageID());
+                metadataRemovalPreparedStatement[queueId].addBatch();
             }
 
-            metadataRemovalPreparedStatement.executeBatch();
-            connection.commit();
+            for (PreparedStatement aMetadataRemovalPreparedStatement : metadataRemovalPreparedStatement) {
+                aMetadataRemovalPreparedStatement.executeBatch();
+                connection.commit();
+            }
 
             if (log.isDebugEnabled()) {
                 log.debug("Messages removed: " + messagesToRemove.size() + " from DLC");
@@ -1238,7 +1246,9 @@ public class RDBMSMessageStoreImpl implements MessageStore {
         } finally {
             messageDeletionContext.stop();
             contextWrite.stop();
-            close(connection, metadataRemovalPreparedStatement, RDBMSConstants.TASK_DELETING_MESSAGE_FROM_DLC);
+            for (PreparedStatement aMetadataRemovalPreparedStatement : metadataRemovalPreparedStatement) {
+                close(connection, aMetadataRemovalPreparedStatement, RDBMSConstants.TASK_DELETING_MESSAGE_FROM_DLC);
+            }
         }
     }
 
@@ -1725,6 +1735,7 @@ public class RDBMSMessageStoreImpl implements MessageStore {
                 String queueName = results.getString(RDBMSConstants.QUEUE_NAME);
                 if (!(DLCQueueUtils.isDeadLetterQueue(queueName)) && queueNames.contains(queueName)) {
                     queueMessageCountForName.put(queueName, results.getInt(RDBMSConstants.PS_ALIAS_FOR_COUNT));
+
                 }
             }
 
