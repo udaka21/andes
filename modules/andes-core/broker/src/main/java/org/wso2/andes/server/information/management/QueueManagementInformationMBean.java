@@ -561,6 +561,7 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
         List<CompositeData> compositeDataList = new ArrayList<>();
         try {
 
+
             List<AndesMessageMetadata> nextNMessageMetadataFromQueue;
             if (!DLCQueueUtils.isDeadLetterQueue(queueName)) {
                 nextNMessageMetadataFromQueue = Andes.getInstance()
@@ -987,6 +988,8 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
             Object[] itemValues = null;
             //get AMQMessage from AndesMessageMetadata
             AMQMessage amqMessage = AMQPUtils.getAMQMessageFromAndesMetaData(andesMessageMetadata);
+            //get queue name for each Message
+            String queueName = andesMessageMetadata.getStorageQueueName();
             //header properties from AMQMessage
             BasicContentHeaderProperties properties = (BasicContentHeaderProperties) amqMessage.getContentHeaderBody()
                     .getProperties();
@@ -1023,7 +1026,7 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
             //content is constructing
             final int bodySize = (int) amqMessage.getSize();
 
-            AndesMessagePart constructedContent = constructContent(bodySize, amqMessage);
+            AndesMessagePart constructedContent = constructContent(bodySize, amqMessage, queueName);
             byte[] messageContent = constructedContent.getData();
             int position = constructedContent.getOffset();
 
@@ -1059,11 +1062,11 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
      *
      * @param bodySize   Original content size of the message
      * @param amqMessage AMQMessage
+     * @param queueName queueName for each message
      * @return Message content and last position of written data as an AndesMessagePart
      * @throws MBeanException
      */
-    private AndesMessagePart constructContent(int bodySize, AMQMessage amqMessage) throws MBeanException {
-
+    private AndesMessagePart constructContent(int bodySize, AMQMessage amqMessage, String queueName) throws MBeanException {
         AndesMessagePart andesMessagePart;
 
         if (amqMessage.getMessageMetaData().isCompressed()) {
