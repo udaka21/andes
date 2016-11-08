@@ -1697,7 +1697,7 @@ public class AMQChannel implements SessionConfig, AMQSessionModel
 
     public <T extends StorableMessageMetaData> StoredAMQPMessage addAMQPMessage(T metaData){
         //get storageQueueName for handle multiple tables.
-        String storageQueueName = "";
+        String storageQueueName = null;
         long mid = 0; // Message IDs will be given By Andes
         if (_logger.isDebugEnabled()) {
             _logger.debug("MessageID generated:" + mid);

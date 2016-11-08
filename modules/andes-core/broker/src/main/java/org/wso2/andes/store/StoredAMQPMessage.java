@@ -35,7 +35,7 @@ public class StoredAMQPMessage implements StoredMessage {
     private static Log log = LogFactory.getLog(StoredAMQPMessage.class);
 
     private final long messageId;
-    private String queueName;
+    private String storageQueueName;
     private StorableMessageMetaData metaData;
     private String channelID;
     private String exchange;
@@ -46,12 +46,12 @@ public class StoredAMQPMessage implements StoredMessage {
      * Create a stored message combining metadata and message ID
      * @param messageId message ID
      * @param metaData  metadata of message
-     * @param queueName
+     * @param storageQueueName
      */
     //todo; we can generalize this as StoredMessage (based on metada info it will refer relevant store)
-    public StoredAMQPMessage(long messageId, StorableMessageMetaData metaData, String queueName) {
+    public StoredAMQPMessage(long messageId, StorableMessageMetaData metaData, String storageQueueName) {
 
-        this.queueName = queueName;
+        this.storageQueueName = storageQueueName;
         this.messageId = messageId;
         this.metaData = metaData;
     }
@@ -60,7 +60,7 @@ public class StoredAMQPMessage implements StoredMessage {
     public StorableMessageMetaData getMetaData() {
         if (metaData == null) {
             try {
-                QpidAndesBridge.getMessageMetaData(messageId, queueName);
+                QpidAndesBridge.getMessageMetaData(messageId, storageQueueName);
             } catch (AMQException e) {
                 log.error("Error while getting message metaData for message ID " + messageId);
             }
@@ -93,7 +93,7 @@ public class StoredAMQPMessage implements StoredMessage {
     public int getContent(int offsetInMessage, ByteBuffer dst) {
         int c = 0;
         try {
-            c = QpidAndesBridge.getMessageContentChunk(messageId, offsetInMessage, dst, queueName);
+            c = QpidAndesBridge.getMessageContentChunk(messageId, offsetInMessage, dst, storageQueueName);
         } catch (AMQException e) {
            log.error("Error while getting message content chunk messageID=" + messageId + " offset=" + offsetInMessage,e);
         }
