@@ -19,7 +19,15 @@
 package org.wso2.andes.kernel.disruptor.delivery;
 
 import com.gs.collections.impl.set.mutable.primitive.LongHashSet;
-import com.lmax.disruptor.*;
+import com.lmax.disruptor.AlertException;
+import com.lmax.disruptor.EventProcessor;
+import com.lmax.disruptor.ExceptionHandler;
+import com.lmax.disruptor.LifecycleAware;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.Sequence;
+import com.lmax.disruptor.SequenceBarrier;
+import com.lmax.disruptor.SequenceReportingEventHandler;
+import com.lmax.disruptor.Sequencer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.andes.kernel.ProtocolMessage;
@@ -110,7 +118,46 @@ public class ConcurrentContentReadTaskBatchProcessor implements EventProcessor {
     }
 
     /**
+     * DeliveryEventDataList is a data structure that contain DeliveryEventData and relevant contain length.
+     */
+    private class DeliveryEventDataList {
+
+        private int length;
+        private ArrayList<DeliveryEventData> event;
+
+        public  DeliveryEventDataList(){
+                this.length = 0;
+                this.event = null;
+        }
+
+        public void setEvent(ArrayList<DeliveryEventData> event) {
+            this.event = event;
+        }
+
+        public ArrayList<DeliveryEventData> getEvent() {
+            return event;
+        }
+
+        public void setLength(int length) {
+            this.length = length;
+        }
+
+        public int getLength() {
+            return length;
+        }
+
+        private void  addDeliveryEventDataToList (DeliveryEventData dataSet) {
+                event.add(dataSet);
+                length = length + dataSet.getAndesContent().getContentLength();
+        }
+
+
+    }
+
+    /**
      * It is ok to have another thread rerun this method after a halt().
+     * In here we made DeliveryEventDataList per queue. When  totalContentLength >= batchSize,
+     * It passes storageQueueName and messageMetadataList to ContentCacheCreator.
      */
     @Override
     public void run() {
@@ -122,16 +169,16 @@ public class ConcurrentContentReadTaskBatchProcessor implements EventProcessor {
         notifyStart();
         DeliveryEventData event = null;
         int totalContentLength = 0;
-        //List<DeliveryEventData> eventList = new ArrayList<>(this.batchSize);
-        HashMap<String, ArrayList<DeliveryEventData>> messageMap = new HashMap<>();
+
+        HashMap<String, DeliveryEventDataList> messageMap = new HashMap<>();
         LongHashSet messageIDSet = new LongHashSet();
         long currentTurn;
         long nextSequence = sequence.get() + 1L;
+        DeliveryEventDataList messageMetadataList;
 
         String storageQueueName;
 
         while (true) {
-          //  List<DeliveryEventData> eventList;
             try {
                 final long availableSequence = sequenceBarrier.waitFor(nextSequence);
 
@@ -140,20 +187,39 @@ public class ConcurrentContentReadTaskBatchProcessor implements EventProcessor {
 
                     ProtocolMessage metadata = event.getMetadata();
                     long currentMessageID = metadata.getMessageID();
-                    // Current Queue Name.
+
+                    //Current Queue name for the usage of multiple tables.
                     storageQueueName = metadata.getMessage().getStorageQueueName();
+
+
                     currentTurn = currentMessageID % groupCount;
                     if (turn == currentTurn) {
                         //eventList.add(event);
-                        totalContentLength = totalContentLength + metadata.getMessage().getMessageContentLength();
+
                         messageIDSet.add(currentMessageID);
-                        ArrayList<DeliveryEventData> messageMetadataList = messageMap.get(storageQueueName);
+                        messageMetadataList = messageMap.get(storageQueueName);
+
                         if (null == messageMetadataList) {
-                            messageMetadataList = new ArrayList<>();
-                            // Put storageQueueName and messageMetadataList to messageMap hash.
-                            messageMap.put(storageQueueName, messageMetadataList);
+
+                            //Put storageQueueName and messageMetadataList to messageMap hash.
+                            DeliveryEventDataList newMessageMetadataList = new DeliveryEventDataList();
+                            messageMap.put(storageQueueName, newMessageMetadataList);
                         }
-                        messageMetadataList.add(event);
+                        messageMap.get(storageQueueName).addDeliveryEventDataToList(event);
+                        totalContentLength = messageMetadataList.getLength();
+                        // Batch and invoke event handler.
+                        if (((messageMetadataList.getLength() >= batchSize) || (nextSequence == availableSequence)) && messageMap
+                                .isEmpty()) {
+
+                            eventHandler.onEvent(storageQueueName, messageMetadataList.getEvent());
+                            if (log.isDebugEnabled()) {
+                                log.debug("Event handler called with message id list " + messageIDSet);
+                            }
+
+                            // reset counters and lists
+                            messageMap.clear();
+                            messageIDSet.clear();
+                        }
                     }
 
                     if (log.isDebugEnabled()) {
@@ -161,20 +227,6 @@ public class ConcurrentContentReadTaskBatchProcessor implements EventProcessor {
                                 + ", groupCount " + groupCount);
                     }
 
-                    // Batch and invoke event handler. 
-                    if (((totalContentLength >= batchSize) || (nextSequence == availableSequence)) && messageMap
-                            .isEmpty()) {
-
-                        eventHandler.onEvent(messageMap);
-                        if (log.isDebugEnabled()) {
-                            log.debug("Event handler called with message id list " + messageIDSet);
-                        }
-
-                        // reset counters and lists
-                        messageMap.clear();
-                        messageIDSet.clear();
-                        totalContentLength = 0;
-                    }
                     nextSequence++;
                 }
                 sequence.set(nextSequence - 1L);
@@ -191,7 +243,6 @@ public class ConcurrentContentReadTaskBatchProcessor implements EventProcessor {
                 // the events. If not cleared next iteration would contain the previous iterations event list
                 messageMap.clear();
                 messageIDSet.clear();
-                totalContentLength = 0;
                 nextSequence++;
             }
         }

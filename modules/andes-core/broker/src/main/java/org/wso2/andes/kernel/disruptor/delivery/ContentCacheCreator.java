@@ -27,7 +27,11 @@ import com.gs.collections.impl.set.mutable.primitive.LongHashSet;
 import org.apache.log4j.Logger;
 import org.wso2.andes.configuration.AndesConfigurationManager;
 import org.wso2.andes.configuration.enums.AndesConfiguration;
-import org.wso2.andes.kernel.*;
+import org.wso2.andes.kernel.AndesException;
+import org.wso2.andes.kernel.AndesMessagePart;
+import org.wso2.andes.kernel.DisruptorCachedContent;
+import org.wso2.andes.kernel.MessagingEngine;
+import org.wso2.andes.kernel.ProtocolMessage;
 import org.wso2.andes.tools.utils.MessageTracer;
 
 import java.util.ArrayList;
@@ -84,118 +88,99 @@ public class ContentCacheCreator {
     /**
      * Load content for a message in to the memory.
      *
-     * @param messageMap List of delivery event data
+     * @param queueName QueueName for each DeliveryEventData
+     * @param deliveryEventDataPerQueue List of delivery event data perQueue
      * @throws AndesException Thrown when getting content from the message store.
      */
-    public void onEvent(HashMap<String, ArrayList<DeliveryEventData>> messageMap) throws AndesException {
+    public void onEvent(String queueName, ArrayList<DeliveryEventData> deliveryEventDataPerQueue) throws AndesException {
 
         LongHashSet messagesToFetch = new LongHashSet();
-        // We are making a Hashmap in ConcurrentContentReadTaskBatchProcessor. So no need to recreate it here.
+        List<DeliveryEventData> messagesWithoutCachedContent = new ArrayList<>();
 
-//        List<DeliveryEventData> messagesWithoutCachedContent = new ArrayList<>();
-//        String storageQueueName ;
-//
-//        HashMap<String, ArrayList<Long>> messageMap = new HashMap<>();
-//
-//        for (DeliveryEventData deliveryEventData : eventDataList) {
-//            ProtocolMessage metadata = deliveryEventData.getMetadata();
-//            long messageID = metadata.getMessageID();
-//            int contentLength = metadata.getMessage().getMessageContentLength();
-//
-//            storageQueueName = metadata.getMessage().getSlot().getStorageQueueName();
-//
-//            ArrayList<Long> messageList = messageMap.get(storageQueueName);
-//
-//            if (null == messageList) {
-//
-//                messageList = new ArrayList<>();
-//                messageMap.put(storageQueueName, messageList);
-//            }
-//            messageList.add(messageID);
-//
-//            if (contentLength > 0) {
-//
-//                DisruptorCachedContent content = contentCache.getIfPresent(messageID);
-//                //DisruptorCachedContent content = null;
-//
-//                if (null != content) {
-//                    deliveryEventData.setAndesContent(content);
-//
-//                    if (log.isTraceEnabled()) {
-//                        log.trace("Content read from cache for message " + messageID);
-//                    }
-//
-//                } else {
-//                    // Add to the list to fetch later
-//                    messagesToFetch.add(messageID);
-//                    messagesWithoutCachedContent.add(deliveryEventData);
-//                }
-//
-//            } else {
-//                // user has sent a message with out content. trying to read from
-//                // the message storage is not required.
-//                continue;
-//            }
-//
-//        }
+        for (DeliveryEventData deliveryEventData : deliveryEventDataPerQueue ) {
+            ProtocolMessage metadata = deliveryEventData.getMetadata();
+            long messageID = metadata.getMessageID();
+            int contentLength = metadata.getMessage().getMessageContentLength();
+
+            if (contentLength > 0) {
+
+                DisruptorCachedContent content = contentCache.getIfPresent(messageID);
+
+                if (null != content) {
+                    deliveryEventData.setAndesContent(content);
+
+                    if (log.isTraceEnabled()) {
+                        log.trace("Content read from cache for message " + messageID);
+                    }
+
+                } else {
+                    // Add to the list to fetch later
+                    messagesToFetch.add(messageID);
+                    messagesWithoutCachedContent.add(deliveryEventData);
+                }
+
+            } else {
+                // user has sent a message with out content. trying to read from
+                // the message storage is not required.
+                continue;
+            }
+
+        }
 
         LongArrayList containMessagesToFetch = new LongArrayList();
         containMessagesToFetch.addAll(messagesToFetch);
 
         LongObjectHashMap<List<AndesMessagePart>> contentListMap = MessagingEngine.getInstance()
-                .getContent(messageMap);
+                .getContent(queueName, containMessagesToFetch);
 
-        for (Map.Entry<String, ArrayList<DeliveryEventData>> entry : messageMap.entrySet()) {
+        for (DeliveryEventData deliveryEventData : messagesWithoutCachedContent) {
 
-            for (DeliveryEventData deliveryEventData : entry.getValue()) {
+            ProtocolMessage metadata = deliveryEventData.getMetadata();
+            long messageID = metadata.getMessageID();
+            // We check again for content put in cache in the previous iteration
+            DisruptorCachedContent content = contentCache.getIfPresent(messageID);
 
-                ProtocolMessage metadata = deliveryEventData.getMetadata();
-                long messageID = metadata.getMessageID();
-                // We check again for content put in cache in the previous iteration
-                DisruptorCachedContent content;
+            if (null != content) {
+                deliveryEventData.setAndesContent(content);
 
-//            if (null != content) {
-//                deliveryEventData.setAndesContent(content);
-//
-//                if (log.isTraceEnabled()) {
-//                    log.trace("Content read from cache for message " + messageID);
-//                }
-//
-//                continue;
-//            }
-
-                int contentSize = metadata.getMessage().getMessageContentLength();
-                List<AndesMessagePart> contentList = contentListMap.get(messageID);
-
-                if (null != contentList) {
-                    Map<Integer, AndesMessagePart> messagePartMap = new HashMap<>(contentList.size());
-
-                    for (AndesMessagePart messagePart : contentList) {
-                        messagePartMap.put(messagePart.getOffset(), messagePart);
-                    }
-
-                    content = new DisruptorCachedContent(messagePartMap, contentSize, maxChunkSize);
-//                contentCache.put(messageID, content);
-                    deliveryEventData.setAndesContent(content);
-
-                    if (log.isTraceEnabled()) {
-                        log.trace("All content read for message " + messageID);
-                    }
-                } else {
-                    // potential scenario this could happen is when there is a split
-                    // brain scenario (with two coodinator working with same set of
-                    // messages
-                    // in parallel. e.g. when this node tries to send messages,
-                    // another node (in other network partition) sends these
-                    // messages and then deletes content and metadata from message
-                    // store
-                    recordFailedMessageContentRetrievalError(deliveryEventData);
+                if (log.isTraceEnabled()) {
+                    log.trace("Content read from cache for message " + messageID);
                 }
 
-                //Tracing message
-                MessageTracer.trace(metadata.getMessage(), MessageTracer.CONTENT_READ);
-                logFailedMessageContentRetreivalErrors();
+                continue;
             }
+
+            int contentSize = metadata.getMessage().getMessageContentLength();
+            List<AndesMessagePart> contentList = contentListMap.get(messageID);
+
+            if (null != contentList) {
+                Map<Integer, AndesMessagePart> messagePartMap = new HashMap<>(contentList.size());
+
+                for (AndesMessagePart messagePart : contentList) {
+                    messagePartMap.put(messagePart.getOffset(), messagePart);
+                }
+
+                content = new DisruptorCachedContent(messagePartMap, contentSize, maxChunkSize);
+                contentCache.put(messageID, content);
+                deliveryEventData.setAndesContent(content);
+
+                if (log.isTraceEnabled()) {
+                    log.trace("All content read for message " + messageID);
+                }
+            } else {
+                // potential scenario this could happen is when there is a split
+                // brain scenario (with two coodinator working with same set of
+                // messages
+                // in parallel. e.g. when this node tries to send messages,
+                // another node (in other network partition) sends these
+                // messages and then deletes content and metadata from message
+                // store
+                recordFailedMessageContentRetrievalError(deliveryEventData);
+            }
+
+            //Tracing message
+            MessageTracer.trace(metadata.getMessage(), MessageTracer.CONTENT_READ);
+            logFailedMessageContentRetreivalErrors();
         }
     }
 

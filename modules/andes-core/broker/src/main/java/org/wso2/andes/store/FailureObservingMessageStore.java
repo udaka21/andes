@@ -34,8 +34,6 @@ import org.wso2.andes.kernel.slot.Slot;
 import org.wso2.andes.kernel.slot.RecoverySlotCreator;
 import org.wso2.andes.tools.utils.MessageTracer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
@@ -102,7 +100,7 @@ public class FailureObservingMessageStore implements MessageStore {
     @Override
     public AndesMessagePart getContent(long messageId, int offsetValue, String queueName) throws AndesException {
         try {
-            return wrappedInstance.getContent(messageId, offsetValue, );
+            return wrappedInstance.getContent(messageId, offsetValue, queueName );
         } catch (AndesStoreUnavailableException exception) {
             notifyFailures(exception);
             throw exception;
@@ -111,12 +109,12 @@ public class FailureObservingMessageStore implements MessageStore {
 
     /**
      * {@inheritDoc}
-     * @param messageIDList
+     * @param queueName
      */
     @Override
-    public LongObjectHashMap<List<AndesMessagePart>> getContent(HashMap<String, ArrayList<Long>> messageIDList) throws AndesException {
+    public LongObjectHashMap<List<AndesMessagePart>> getContent(LongArrayList messageIdList, String queueName) throws AndesException {
         try {
-            return wrappedInstance.getContent(messageIDList);
+            return wrappedInstance.getContent(messageIdList, queueName);
         } catch (AndesStoreUnavailableException exception) {
             notifyFailures(exception);
             throw exception;

@@ -45,6 +45,7 @@ import org.wso2.andes.kernel.FlowControlListener;
 import org.wso2.andes.kernel.MessagingEngine;
 import org.wso2.andes.kernel.ProtocolType;
 import org.wso2.andes.kernel.disruptor.compression.LZ4CompressionHelper;
+import org.wso2.andes.kernel.disruptor.delivery.DeliveryEventData;
 import org.wso2.andes.kernel.disruptor.inbound.InboundQueueEvent;
 import org.wso2.andes.kernel.registry.StorageQueueRegistry;
 import org.wso2.andes.kernel.router.AndesMessageRouter;
@@ -1068,6 +1069,7 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
      */
     private AndesMessagePart constructContent(int bodySize, AMQMessage amqMessage, String queueName) throws MBeanException {
         AndesMessagePart andesMessagePart;
+        HashMap<String, ArrayList<DeliveryEventData>> messageMap = new HashMap<>();
 
         if (amqMessage.getMessageMetaData().isCompressed()) {
             /* If the current message was compressed by the server, decompress the message content and, get it as an
@@ -1079,7 +1081,7 @@ public class QueueManagementInformationMBean extends AMQManagedObject implements
 
             try {
                 LongObjectHashMap<List<AndesMessagePart>> contentListMap = MessagingEngine.getInstance()
-                        .getContent(messList);
+                        .getContent(queueName ,messList );
                 List<AndesMessagePart> contentList = contentListMap.get(messageID);
 
                 andesMessagePart = lz4CompressionHelper.getDecompressedMessage(contentList, bodySize);

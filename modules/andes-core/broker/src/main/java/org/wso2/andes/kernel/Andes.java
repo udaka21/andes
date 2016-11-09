@@ -544,7 +544,7 @@ public class Andes {
      * @throws AndesException
      */
     public LongObjectHashMap<List<AndesMessagePart>> getContent(LongArrayList messageIdList, String destinationQueueName) throws AndesException {
-        return MessagingEngine.getInstance().getContent(messageIdList);
+        return MessagingEngine.getInstance().getContent(destinationQueueName , messageIdList);
     }
 
     /**

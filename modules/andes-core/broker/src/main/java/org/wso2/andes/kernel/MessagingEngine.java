@@ -144,12 +144,14 @@ public class MessagingEngine {
     /**
      * Read content for given message metadata list
      *
+     * @param queueName
      * @param messageHash message id list for the content to be retrieved
      * @return <code>Map<Long, List<AndesMessagePart>></code> Message id and its corresponding message part list
      * @throws AndesException
      */
-    public LongObjectHashMap<List<AndesMessagePart>> getContent(LongArrayList messageHash) throws AndesException {
-        return messageStore.getContent(messageHash);
+    public LongObjectHashMap<List<AndesMessagePart>> getContent(String queueName, LongArrayList messageHash)
+            throws AndesException {
+        return messageStore.getContent(messageHash, queueName);
     }
 
     /**
@@ -336,7 +338,7 @@ public class MessagingEngine {
      * @throws AndesException
      */
     public AndesMessagePart getContent(long messageId, int offsetValue, String queueName) throws AndesException {
-        return messageStore.getContent(messageId, offsetValue, queueName );
+        return messageStore.getContent(messageId, offsetValue, queueName);
     }
 
     /**
